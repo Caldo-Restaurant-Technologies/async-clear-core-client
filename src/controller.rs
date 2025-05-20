@@ -1,7 +1,4 @@
-use std::{
-    array, error,
-    fmt::{self, Formatter},
-};
+use std::array;
 
 use tokio::{
     net::ToSocketAddrs,
@@ -13,6 +10,8 @@ use crate::{
     io::{AnalogInput, DigitalInput, DigitalOutput, HBridge},
     motor::{ClearCoreMotor, MotorBuilder},
 };
+
+use anyhow::{Result, anyhow};
 
 pub const STX: u8 = 2;
 pub const CR: u8 = 13;
@@ -33,29 +32,46 @@ pub struct Message {
     pub response: oneshot::Sender<Vec<u8>>,
 }
 
-#[derive(Debug)]
-pub struct Error {
-    pub message: String,
-}
+//#[derive(Debug)]
+// pub struct Error {
+//     pub message: String,
+// }
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-impl<T: error::Error + Send + Sync + 'static> From<T> for Error {
-    fn from(value: T) -> Self {
-        Self {
-            message: value.to_string(),
-        }
-    }
-}
+// impl From<anyhow::Error> for Error {
+//     fn from(e: anyhow::Error) -> Self {
+//         Self {
+//             message: e.to_string(),
+//         }
+//     }
+// }
 
-pub(crate) fn check_reply(reply: &[u8]) -> Result<(), Error> {
+// impl From<std::io::Error> for Error {
+//     fn from(e: std::io::Error) -> Self {
+//         Self {
+//             message: e.to_string(),
+//         }
+//     }
+// }
+
+// impl From<std::str::Utf8Error> for Error {
+//     fn from(e: std::str::Utf8Error) -> Self {
+//         Self {
+//             message: e.to_string(),
+//         }
+//     }
+// }
+
+// impl fmt::Display for Error {
+//     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+//         write!(f, "{}", self.message)
+//     }
+// }
+
+
+
+pub(crate) fn check_reply(reply: &[u8]) -> Result<()> {
     if reply[REPLY_IDX] == FAILED_REPLY {
-        Err(Error {
-            message: std::str::from_utf8(reply)?.to_string(),
-        })
+        Err(anyhow!(std::str::from_utf8(reply)?.to_string()))
     } else {
         Ok(())
     }
